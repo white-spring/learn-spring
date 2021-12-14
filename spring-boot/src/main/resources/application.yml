@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: white
+
+server:
+  port: 8020
+
+logging:
+  path: ./logs
