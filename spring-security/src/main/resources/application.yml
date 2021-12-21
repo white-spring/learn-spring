@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: white
+#  会被java中的配置覆盖覆盖
+  security:
+    user:
+      name: user
+      password: 123
+
+server:
+  port: 8020
