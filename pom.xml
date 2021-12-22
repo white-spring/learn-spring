@@ -11,7 +11,7 @@
 
     <groupId>com.white</groupId>
     <artifactId>spring-boot</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>2021</version>
     <name>lean</name>
     <packaging>pom</packaging>
     <description>to test and learn spring</description>
@@ -30,14 +30,16 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- project lombok -->
-            <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>1.18.8</version>
-            </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.22</version>
+        </dependency>
+    </dependencies>
 
     <distributionManagement>
         <repository>

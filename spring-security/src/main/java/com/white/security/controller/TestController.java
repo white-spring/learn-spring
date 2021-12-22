@@ -20,4 +20,9 @@ public class TestController {
     public String user() {
         return "user";
     }
+
+    @GetMapping("/needlogin")
+    public String needLogin() {
+        return "needLogin";
+    }
 }
