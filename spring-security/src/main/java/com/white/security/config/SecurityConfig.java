@@ -1,18 +1,27 @@
 package com.white.security.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.code.kaptcha.Producer;
+import com.google.code.kaptcha.impl.DefaultKaptcha;
+import com.google.code.kaptcha.util.Config;
+import com.white.security.custom.CustomAuthenticationProvider;
 import com.white.security.custom.CustomUserDetailsService;
 import java.io.PrintWriter;
+import java.util.Collections;
+import java.util.Properties;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
@@ -45,7 +54,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()
 //                .antMatchers("/admin/**").hasRole("admin")
 //                .antMatchers("/user/**").hasRole("user")
-                .antMatchers("/needlogin/**").fullyAuthenticated()
+//                .antMatchers("/needlogin/**").fullyAuthenticated()
+                .antMatchers("/vc.jpg").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .rememberMe()
@@ -58,6 +68,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     resp.setContentType("application/json;charset=utf-8");
                     PrintWriter out = resp.getWriter();
                     out.write(new ObjectMapper().writeValueAsString(principal));
+                    out.flush();
+                    out.close();
+                })
+                .failureHandler((req, resp, e) -> {
+                    resp.setContentType("application/json;charset=utf-8");
+                    PrintWriter out = resp.getWriter();
+                    out.write(new ObjectMapper().writeValueAsString(e.getMessage()));
                     out.flush();
                     out.close();
                 })
@@ -100,7 +117,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
 
-
 //    @Bean
 //    protected UserDetailsService userDetailsService() {
 //        JdbcUserDetailsManager manager = new JdbcUserDetailsManager();
@@ -114,11 +130,41 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 //        return manager;
 //    }
 
+    //角色继承
     @Bean
     RoleHierarchy roleHierarchy() {
         RoleHierarchyImpl hierarchy = new RoleHierarchyImpl();
         hierarchy.setHierarchy("ROLE_admin > ROLE_user");
         return hierarchy;
+    }
+
+    //验证码
+    @Bean
+    Producer verifyCode() {
+        Properties properties = new Properties();
+        properties.setProperty("kaptcha.image.width", "150");
+        properties.setProperty("kaptcha.image.height", "50");
+        properties.setProperty("kaptcha.textproducer.char.string", "0123456789");
+        properties.setProperty("kaptcha.textproducer.char.length", "4");
+        Config config = new Config(properties);
+        DefaultKaptcha defaultKaptcha = new DefaultKaptcha();
+        defaultKaptcha.setConfig(config);
+        return defaultKaptcha;
+    }
+
+    @Bean
+    CustomAuthenticationProvider customAuthenticationProvider() {
+        CustomAuthenticationProvider customAuthenticationProvider = new CustomAuthenticationProvider();
+        customAuthenticationProvider.setPasswordEncoder(new BCryptPasswordEncoder());
+        customAuthenticationProvider.setUserDetailsService(customUserDetailsService);
+        return customAuthenticationProvider;
+    }
+
+    @Bean
+    @Override
+    protected AuthenticationManager authenticationManager() throws Exception {
+        ProviderManager manager = new ProviderManager(Collections.singletonList(customAuthenticationProvider()));
+        return manager;
     }
 }
 
